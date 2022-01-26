@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        minSdk 16
+        targetSdk 31
+
+        consumerProguardFiles "consumer-rules.pro"
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_static",
+                        "-DCORRECT_VERSION_CODE=" + project.versionCode,
+                        "-DCORRECT_APPLICATION_NAME=" + "cn.ezandroid.ezprotect.MyApplication",
+                        "-DCORRECT_PACKAGE_NAME=" + project.applicationId,
+                        "-DCORRECT_APK_SIGN=" + "0f65981c4d8c44aaea1d9e232fbde4b1"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+            version "3.18.1"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    ndkVersion "21.1.6352462"
+}
+
+dependencies {
+}
