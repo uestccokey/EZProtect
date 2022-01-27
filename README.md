@@ -1,12 +1,12 @@
 # EZProtect
 
-一个Native级的Android应用防篡改库
+一个Native层的Android应用防护库
 
 去年在开发一个个人项目的过程中，发现自己的应用被人破解修改，并且被二次打包放到了网上，因此对应用安全防护进行了一点研究。
 
 虽然市场上大部分App已经进行了代码混淆、签名校验和Dex加固，但是现在的破解工具太方便了。诸如脱壳、去签名、重打包等功能，手机安装MT管理器或者NP管理器后都可以一条龙完成，因此需要继续增加破解难度。
 
-国内开发者用的最多的防篡改库可能是 https://github.com/lamster2018/EasyProtector ，该库集成了不少检测方法，但是他的重大缺点就是校验方法放在Java层，使用Xposed等框架可以轻易过掉检测，因此实现了一个Native级的Android应用防篡改库。
+国内开发者用的最多的防护库可能是 https://github.com/lamster2018/EasyProtector ，该库集成了不少检测方法，但是他的重大缺点就是校验方法放在Java层，使用Xposed等框架可以轻易过掉检测，因此实现了一个Native层的Android应用防篡改库。
 
 ### 防护能力
 
@@ -67,4 +67,5 @@
 可以获取到当前APK文件和此加密So包的文件信息用于服务器校验
 
 注意，编译时需要使用Ollvm混淆，配置可以参考文章
+
 https://blog.csdn.net/u013314647/article/details/117740784?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-0.no_search_link&spm=1001.2101.3001.4242
