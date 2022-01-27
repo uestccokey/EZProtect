@@ -3,7 +3,7 @@ package cn.ezandroid.ezprotect
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.TextView
-import cn.ezandroid.ezprotect.lib.Native
+import cn.ezandroid.lib.ezprotect.Native
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

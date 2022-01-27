@@ -1,4 +1,4 @@
-package cn.ezandroid.ezprotect.lib
+package cn.ezandroid.lib.ezprotect
 
 /**
  * Jni接口，通过动态注册，因此该类不能混淆，为避免破解者反编译后通过函数名了解函数实际功能，这里使用无意义方法名，应用时通过Native类进行调用
