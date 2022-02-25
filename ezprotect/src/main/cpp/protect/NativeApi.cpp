@@ -77,17 +77,20 @@ char *strlwr(char *str) {
 /// TODO 未来可增加对太极等更多框架的检测
 static bool checkXposedOrCydia(JNIEnv *env) {
     const char *file_path = "/proc/self/maps";
-    const char *xposed_lib = "xposed"; // Xposed、Virtual Xposed框架
+    const char *xposed_lib = "posed"; // Xposed、Virtual Xposed、LSPosed框架
     const char *substrate_lib = "substrate"; // Cydia Substrate框架
     const char *frida_lib = "frida"; // Frida框架
+    const char *hook_lib = "hook"; // 其他明显是在干坏事的库
     FILE *fp = fopen(file_path, "r");
     if (fp != nullptr) {
         char line[1024] = {0};
         while (fgets(line, sizeof(line), fp) != nullptr) {
-//            LOGE("%s", line);
             char *lwr = strlwr(line);
-            if (strstr(lwr, xposed_lib) || strstr(lwr, substrate_lib) || strstr(lwr, frida_lib)) {
-                return true;
+            if (strstr(lwr, ".jar") || strstr(lwr, ".so")) {
+                if (strstr(lwr, xposed_lib) || strstr(lwr, substrate_lib) || strstr(lwr, frida_lib) || strstr(lwr, hook_lib)) {
+//                    LOGI("checkXposedOrCydia %s", line);
+                    return true;
+                }
             }
         }
         fclose(fp);
