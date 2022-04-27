@@ -3,10 +3,14 @@
 #include <dirent.h>
 #include <sys/ptrace.h>
 #include <libgen.h>
+#include <unistd.h>
 #include "NativeApi.h"
 #include "../util/MD5.h"
 #include "../util/Logger.h"
 #include "../util/Aes.h"
+
+#define TRACERPID "TracerPid:"
+#define TRACERPID_LEN (sizeof(TRACERPID) - 1)
 
 /// 使用pm命令获取真实的APK安装包路径
 static const char *getRealAPKPath() {
@@ -50,12 +54,41 @@ static int getFileSize(const char *path) {
     return size;
 }
 
+static bool checkTracePID() {
+    pid_t pid = getpid();
+    const int pathSize = 256;
+    const int bufSize = 1024;
+    char path[pathSize];
+    char line[bufSize];
+    snprintf(path, sizeof(path) - 1, "/proc/%d/status", pid);
+    bool result = false;
+    FILE *fp = fopen(path, "rt");
+    if (fp != nullptr) {
+        while (fgets(line, sizeof(line), fp)) {
+            if (strncmp(line, TRACERPID, TRACERPID_LEN) == 0) {
+                pid_t tracerPid = 0;
+                sscanf(line, "%*s%d", &tracerPid);
+                if (tracerPid) result = true;
+                printf("%s", line);
+                break;
+            }
+        }
+        fclose(fp);
+    }
+    return result;
+}
+
 /// 检测是否被动态调试
 /// 1.通过ptrace自添加防止被调试器挂载来反调试
-/// 2.通过系统提供的Debug.isDebuggerConnected()方法来进行判断
+/// 2.通过检查TracePid!=0来进行判断
+/// 3.通过系统提供的Debug.isDebuggerConnected()方法来进行判断
 static bool checkDebug(JNIEnv *env) {
 //    // 自添加似乎有兼容性问题？待测试
 //    ptrace(PTRACE_TRACEME, 0, 0, 0);
+
+    if (checkTracePID()) {
+        return true;
+    }
 
     jclass vm_debug_clz = env->FindClass("android/os/Debug");
     jmethodID isDebuggerConnected = env->GetStaticMethodID(vm_debug_clz, "isDebuggerConnected", "()Z");
@@ -80,14 +113,13 @@ static bool checkXposedOrCydia(JNIEnv *env) {
     const char *xposed_lib = "posed"; // Xposed、Virtual Xposed、LSPosed框架
     const char *substrate_lib = "substrate"; // Cydia Substrate框架
     const char *frida_lib = "frida"; // Frida框架
-    const char *hook_lib = "hook"; // 其他明显是在干坏事的库
     FILE *fp = fopen(file_path, "r");
     if (fp != nullptr) {
         char line[1024] = {0};
         while (fgets(line, sizeof(line), fp) != nullptr) {
             char *lwr = strlwr(line);
             if (strstr(lwr, ".jar") || strstr(lwr, ".so")) {
-                if (strstr(lwr, xposed_lib) || strstr(lwr, substrate_lib) || strstr(lwr, frida_lib) || strstr(lwr, hook_lib)) {
+                if (strstr(lwr, xposed_lib) || strstr(lwr, substrate_lib) || strstr(lwr, frida_lib)) {
 //                    LOGI("checkXposedOrCydia %s", line);
                     return true;
                 }
@@ -242,7 +274,7 @@ static bool checkVersionCode(JNIEnv *env) {
 
     int version_code = env->GetIntField(package_info, version_code_id);
 #if defined( CORRECT_VERSION_CODE )
-    LOGI("checkVersionCode %d %d", version_code, CORRECT_VERSION_CODE);
+//    LOGI("checkVersionCode %d %d", version_code, CORRECT_VERSION_CODE);
     if (CORRECT_VERSION_CODE != version_code) {
         return false;
     }
@@ -433,7 +465,7 @@ static jstring charToJstring(JNIEnv *env, char *src) {
 }
 
 jstring encrypt(JNIEnv *env, jobject thiz, jstring jstr) {
-    if (nullptr == jstr) {
+    if (nullptr == jstr || checkDebug(env)) {
         return env->NewStringUTF("");
     }
 
@@ -453,7 +485,7 @@ jstring encrypt(JNIEnv *env, jobject thiz, jstring jstr) {
 }
 
 jstring decrypt(JNIEnv *env, jobject thiz, jstring jstr) {
-    if (nullptr == jstr) {
+    if (nullptr == jstr || checkDebug(env)) {
         return env->NewStringUTF("");
     }
 
@@ -475,6 +507,10 @@ jstring decrypt(JNIEnv *env, jobject thiz, jstring jstr) {
 
 /// 返回当前APK文件和此加密So包的文件信息用于服务器校验
 jstring integrity(JNIEnv *env, jobject thiz) {
+    if (checkDebug(env)) {
+        return env->NewStringUTF("");
+    }
+
     const char *path = getRealAPKPath();
     int size = getFileSize(path);
     const char *dir = getFileDir(path);
@@ -510,11 +546,11 @@ jstring integrity(JNIEnv *env, jobject thiz) {
     tmp.append(",");
     tmp.append("\"SoSize\":");
     tmp.append(std::to_string(getFileSize(&so[0])));
-    tmp.append(",");
-    tmp.append("\"SoMD5\":");
-    tmp.append("\"");
-    tmp.append(md5file(so.c_str()));
-    tmp.append("\"");
+//    tmp.append(",");
+//    tmp.append("\"SoMD5\":");
+//    tmp.append("\"");
+//    tmp.append(md5file(so.c_str()));
+//    tmp.append("\"");
     tmp.append("}");
     return env->NewStringUTF(tmp.c_str());
 }

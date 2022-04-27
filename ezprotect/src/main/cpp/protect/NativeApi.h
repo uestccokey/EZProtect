@@ -12,7 +12,7 @@ extern "C" {
 unsigned char SECRET_KEY[] = "ZXphbmRyb2lk";
 
 /// 指定类的路径，通过FindClass方法来找到对应的类
-const char *className = "cn/ezandroid/ezprotect/lib/NativeApi";
+const char *className = "cn/ezandroid/lib/ezprotect/NativeApi";
 
 jstring encrypt(JNIEnv *, jobject, jstring);
 
