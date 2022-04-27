@@ -28,7 +28,9 @@
 
 1.通过ptrace自添加防止被调试器挂载来反调试
 
-2.通过系统提供的Debug.isDebuggerConnected()方法来进行判断
+2.通过检查TracePid!=0来进行判断
+
+3.通过系统提供的Debug.isDebuggerConnected()方法来进行判断
 
 #### 2.检测APK的签名
 
